@@ -508,7 +508,7 @@ $('callCol').classList.remove('hidden');
 }
 const MODELLEN = ['assemblyai-stt-3-7-realtime-agent', 'universal-3-6-pro', 'universal-3-5-pro', 'assemblyai-stt-3-7-realtime'];
 function sleutelwoorden() {
-const vast = ['Sinterklaas', 'Sint', 'Piet', 'Pieten', 'Zwarte Piet', 'Slechtvaardige', 'stoomboot', 'Spanje', 'schoen', 'wortel', 'pepernoten', 'speculaas', 'cadeautje', 'speelgoed', 'braaf', 'liedje', 'Lego'];
+const vast = ['Sinterklaas', 'Sint', 'Piet', 'Pieten', 'Zwarte Piet', 'Slecht Weer Vandaag', 'stoomboot', 'Spanje', 'schoen', 'wortel', 'pepernoten', 'speculaas', 'cadeautje', 'speelgoed', 'braaf', 'liedje', 'Lego'];
 const kids = bellers();
 const tekst = kids.map(k => [k.info, k.verbeter].filter(Boolean).join(' ')).join(' ');
 const namen = tekst.match(/[A-ZÀ-Ý][a-zà-ÿ]{2,}/g) || [];
