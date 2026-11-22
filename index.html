@@ -260,17 +260,34 @@ b.classList.toggle('leeg', leeg);
 b.textContent = leeg ? '📖 Voor ouders: vul in!' : '📖 Boek van ' + (boek.naam || 'je kind');
 }
 toonBoekStatus();
+const OPEN = 'sint-open-gesprek';
+function bewaarOpen() { try { localStorage.setItem(OPEN, JSON.stringify(history)); } catch {} }
+let bezigMetSamenvatting = false;
 async function bewaarSamenvatting(gesprek) {
-if (!gesprek.some(m => m.role === 'user')) return;
+if (!gesprek || !gesprek.some(m => m.role === 'user')) { try { localStorage.removeItem(OPEN); } catch {} return; }
+if (bezigMetSamenvatting) return;
+bezigMetSamenvatting = true;
+const knop = $('oudersBtn'); knop.textContent = '📖 De Sint schrijft in zijn boek…';
+try {
+for (let poging = 0; poging < 3; poging++) {
 try {
 const r = await fetch(API + 'chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'samenvatting', messages: gesprek }) });
 const j = await r.json();
-if (!r.ok || !j.text) return;
+if (r.ok && j.text) {
+boek = leesBoek();
 const oud = (boek.vorige || '').split(/\n{2,}/).filter(Boolean);
 boek.vorige = [j.text.trim(), ...oud].slice(0, 5).join('\n\n');
 schrijfBoek(boek);
-} catch (e) { console.warn('samenvatting mislukt', e); }
+try { if (localStorage.getItem(OPEN) === JSON.stringify(gesprek)) localStorage.removeItem(OPEN); } catch {}
+if (!$('paneel').classList.contains('hidden')) $('kVorige').value = boek.vorige;
+return;
 }
+} catch (e) { console.warn('samenvatting mislukt', e); }
+await new Promise(r => setTimeout(r, 1500 * (poging + 1)));
+}
+} finally { bezigMetSamenvatting = false; toonBoekStatus(); }
+}
+(() => { try { const o = JSON.parse(localStorage.getItem(OPEN) || 'null'); if (o && o.length) bewaarSamenvatting(o); } catch {} })();
 function setStatus(t) { $('status').textContent = t; }
 function setMode(m) {
 state = m;
@@ -317,6 +334,7 @@ return;
 $('callCol').classList.add('hidden');
 $('hangCol').classList.remove('hidden');
 $('sub').textContent = 'Sinterklaaskasteel, Spanje';
+try { const o = JSON.parse(localStorage.getItem(OPEN) || 'null'); if (o && o.length) bewaarSamenvatting(o); } catch {}
 history = [];
 setMode('ringing');
 ring(audioCtx);
@@ -441,6 +459,7 @@ antwoord(t);
 async function antwoord(kindTekst) {
 clearTimeout(porTimer); gepord = false;
 history.push({ role: 'user', content: kindTekst });
+bewaarOpen();
 setMode('thinking');
 let tekst;
 try {
@@ -458,6 +477,7 @@ await sintZegt(tekst);
 async function sintZegt(tekst) {
 if (state === 'idle') return;
 history.push({ role: 'assistant', content: tekst });
+bewaarOpen();
 addMsg('sint', tekst);
 setMode('speaking');
 try {
