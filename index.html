@@ -112,6 +112,16 @@ filter: drop-shadow(0 4px 6px rgba(0,0,0,.4));
 }
 .ouders-btn.leeg { animation: boekpuls 1.4s ease-in-out infinite; background: var(--goud); color: var(--rood-donker); }
 @keyframes boekpuls { 50% { transform: scale(1.08); } }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.tab { border: 2px solid var(--rood); background: #fff; color: var(--rood); border-radius: 12px; padding: 7px 12px; font: 800 14px 'Nunito', sans-serif; cursor: pointer; }
+.tab.aan { background: var(--rood); color: #fff; }
+.tab.plus { border-style: dashed; }
+.paneel select { width: 100%; font: 500 15px 'Nunito', sans-serif; padding: 10px 12px; border-radius: 12px; border: 2px solid #e9d9b0; background: #fff; color: #222; }
+.wie { margin-top: 8px; }
+.wie-label { font-size: 13px; opacity: .85; margin-bottom: 6px; }
+.wie-rij { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.wie-chip { border: 2px solid var(--goud); background: rgba(0,0,0,.2); color: var(--wit); border-radius: 999px; padding: 6px 14px; font: 800 15px 'Nunito', sans-serif; cursor: pointer; }
+.wie-chip.aan { background: var(--goud); color: var(--rood-donker); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { border: 2px solid #e9d9b0; background: #fff; color: #3b1a1f; border-radius: 999px; padding: 6px 11px; font: 700 13px 'Nunito', sans-serif; cursor: pointer; }
 .chip.aan { background: var(--goud); border-color: var(--goud); color: var(--rood-donker); }
@@ -139,6 +149,7 @@ border: 2px solid #e9d9b0; background: #fff; color: #222;
 .opslaan { background: var(--rood); color: #fff; }
 .wis { background: #f1e7cf; color: var(--rood-donker); }
 .klein { font-size: 12px; opacity: .7; margin-top: 4px; }
+@media (max-height: 760px) { .avatar-wrap { width: 150px; height: 150px; margin: 14px 0 10px; } .avatar svg { width: 142px; height: 142px; } .hint { display: none; } }
 @media (max-width: 440px) { .staf { display: none; } .phone { border-radius: 28px; } }
 </style>
 </head>
@@ -153,7 +164,8 @@ border: 2px solid #e9d9b0; background: #fff; color: #222;
 <button class="ouders-btn" id="oudersBtn">📖 Voor ouders</button>
 <section class="paneel hidden" id="paneel" aria-label="Het grote boek">
 <h2>Het grote boek</h2>
-<p class="uitleg">Vul hier wat de Sint over je kind mag weten. Na elk gesprek schrijft de Sint zelf een korte samenvatting bij, zodat hij er de volgende keer naar kan verwijzen. Alles blijft bewaard op dit toestel.</p>
+<p class="uitleg">Vul hier per kind in wat de Sint mag weten. Na elk gesprek schrijft de Sint zelf een korte samenvatting bij. Alles blijft bewaard op dit toestel.</p>
+<div class="tabs" id="kindTabs"></div>
 <div class="rij">
 <div><label for="kNaam">Naam</label><input id="kNaam" placeholder="bv. Lotte"></div>
 <div><label for="kLeeftijd">Leeftijd</label><input id="kLeeftijd" placeholder="bv. 6"></div>
@@ -164,13 +176,16 @@ border: 2px solid #e9d9b0; background: #fff; color: #222;
 <div class="chips" id="fans"></div>
 <input id="fansExtra" placeholder="Nog iets anders? bv. Spider-Man, ballet, Nijntje" style="margin-top:8px">
 <label for="kVerbeter">Wat mag je kind komend jaar beter doen?</label>
-<textarea id="kVerbeter" placeholder="bv. Haar kamer beter opruimen. Minder ruzie maken met broertje Mats. Groenten proeven aan tafel."></textarea>
-<div class="klein">De Sint brengt dit lief en bemoedigend ter sprake en vraagt of je kind wil proberen.</div>
+<textarea id="kVerbeter" placeholder="Eén punt per lijn, bv.&#10;Haar kamer opruimen&#10;Minder ruzie maken met Mats&#10;Groenten proeven"></textarea>
+<div class="klein">De Sint bespreekt de punten één voor één, lief en bemoedigend, en sluit elk punt af met: "Dus beloof je me dat je ... zult doen?"</div>
 <label for="kVorige">Vorige gesprekken</label>
 <textarea id="kVorige" placeholder="Wordt automatisch aangevuld na elk gesprek. Je kunt dit ook zelf aanpassen."></textarea>
 <div class="klein">De Sint gebruikt dit om bv. te zeggen: "Vorige keer vertelde je me over je kat Minou!"</div>
+<label for="duur">Hoe lang mag een gesprek duren?</label>
+<select id="duur"><option value="1">ongeveer 1 minuut</option><option value="2">ongeveer 2 minuten</option><option value="3">ongeveer 3 minuten</option><option value="5">ongeveer 5 minuten</option></select>
+<div class="klein">Daarna laat de Sint je kind uitspreken, reageert nog en neemt dan zelf afscheid.</div>
 <div class="acties">
-<button class="wis" id="wisBtn">Alles wissen</button>
+<button class="wis" id="verwijderBtn">Kind verwijderen</button>
 <button class="opslaan" id="opslaanBtn">Opslaan</button>
 </div>
 </section>
@@ -178,6 +193,7 @@ border: 2px solid #e9d9b0; background: #fff; color: #222;
 <h1>Bel de Sint</h1>
 <div class="sub" id="sub">Rechtstreeks naar het Sinterklaaskasteel</div>
 <div class="timer" id="timer"></div>
+<div class="wie hidden" id="wie"></div>
 <div class="avatar-wrap" id="avatarWrap">
 <div class="ring"></div><div class="ring"></div><div class="ring"></div>
 <div class="avatar">
@@ -243,70 +259,151 @@ let state = 'idle';
 let ws, audioCtx, micStream, workletNode, ringTimer, clockTimer, startTime;
 let history = [];
 let liveEl = null, lastTurnOrder = -1, currentAudio = null;
-const BOEK = 'sint-boek-v1';
-function leesBoek() { try { return JSON.parse(localStorage.getItem(BOEK)) || {}; } catch { return {}; } }
-function schrijfBoek(b) { try { localStorage.setItem(BOEK, JSON.stringify(b)); } catch {} }
-let boek = leesBoek();
+const DATA = 'sint-kinderen-v1';
+const nieuwId = () => 'k' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+function leesData() {
+let d = null;
+try { d = JSON.parse(localStorage.getItem(DATA) || 'null'); } catch {}
+if (!d || !Array.isArray(d.kinderen)) {
+d = { kinderen: [], bellers: [], duur: 2 };
+try { const oud = JSON.parse(localStorage.getItem('sint-boek-v1') || 'null'); if (oud && (oud.naam || oud.info || oud.vorige)) { const k = { id: nieuwId(), ...oud }; d.kinderen.push(k); d.bellers = [k.id]; } } catch {}
+}
+if (!d.duur) d.duur = 2;
+return d;
+}
+function schrijfData() { try { localStorage.setItem(DATA, JSON.stringify(data)); } catch {} }
+let data = leesData();
+const kindVan = (id) => data.kinderen.find(k => k.id === id);
+function bellers() {
+const lijst = (data.bellers || []).map(kindVan).filter(Boolean);
+if (lijst.length) return lijst;
+return data.kinderen.length === 1 ? [data.kinderen[0]] : [];
+}
+const zonderId = (k) => { const { id, ...rest } = k; return rest; };
 const FANS = ["Paw Patrol", "Bluey", "K3", "Bumba", "Frozen (Elsa en Anna)", "Peppa Pig", "Maya de Bij", "Mega Mindy", "Kabouter Plop", "Samson en Marie", "Pokémon", "Minecraft", "Lego", "Superhelden", "Prinsessen", "Eenhoorns", "Dinosaurussen", "Paarden", "Voetbal", "Rode Duivels", "Brandweer en politie", "Auto's en treinen", "Dieren", "Tekenen en knutselen", "Dansen en zingen", "Gamen"];
-function tekenFans() {
-const gekozen = new Set(boek.fans || []);
+let bewerkId = null;
+function tekenFans(k) {
+const gekozen = new Set(k.fans || []);
 $('fans').innerHTML = '';
 for (const t of FANS) {
 const c = document.createElement('button'); c.type = 'button'; c.className = 'chip' + (gekozen.has(t) ? ' aan' : ''); c.textContent = t;
 c.onclick = () => c.classList.toggle('aan');
 $('fans').appendChild(c);
 }
-$('fansExtra').value = (boek.fans || []).filter(t => !FANS.includes(t)).join(', ');
+$('fansExtra').value = (k.fans || []).filter(t => !FANS.includes(t)).join(', ');
 }
 function leesFans() {
 const lijst = [...$('fans').querySelectorAll('.chip.aan')].map(c => c.textContent);
 const extra = $('fansExtra').value.split(',').map(x => x.trim()).filter(Boolean);
 return [...new Set([...lijst, ...extra])].slice(0, 30);
 }
-function vulPaneel() {
-$('kNaam').value = boek.naam || ''; $('kLeeftijd').value = boek.leeftijd || '';
-tekenFans();
-$('kInfo').value = boek.info || ''; $('kVerbeter').value = boek.verbeter || ''; $('kVorige').value = boek.vorige || '';
+function formulierNaarKind() {
+const k = kindVan(bewerkId);
+if (!k) return;
+Object.assign(k, { naam: $('kNaam').value.trim(), leeftijd: $('kLeeftijd').value.trim(), info: $('kInfo').value.trim(), verbeter: $('kVerbeter').value.trim(), fans: leesFans(), vorige: $('kVorige').value.trim() });
 }
-$('oudersBtn').onclick = () => { if (state !== 'idle') return; vulPaneel(); $('paneel').classList.remove('hidden'); };
+function kindNaarFormulier() {
+const k = kindVan(bewerkId) || {};
+$('kNaam').value = k.naam || ''; $('kLeeftijd').value = k.leeftijd || '';
+tekenFans(k);
+$('kInfo').value = k.info || ''; $('kVerbeter').value = k.verbeter || ''; $('kVorige').value = k.vorige || '';
+$('verwijderBtn').textContent = 'Kind verwijderen'; $('verwijderBtn').dataset.zeker = '';
+}
+function tekenTabs() {
+const t = $('kindTabs'); t.innerHTML = '';
+data.kinderen.forEach((k, i) => {
+const b = document.createElement('button'); b.type = 'button';
+b.className = 'tab' + (k.id === bewerkId ? ' aan' : '');
+b.textContent = k.naam || ('Kind ' + (i + 1));
+b.onclick = () => { formulierNaarKind(); bewerkId = k.id; tekenTabs(); kindNaarFormulier(); };
+t.appendChild(b);
+});
+const plus = document.createElement('button'); plus.type = 'button'; plus.className = 'tab plus'; plus.textContent = '+ Kind';
+plus.onclick = () => { formulierNaarKind(); const k = { id: nieuwId() }; data.kinderen.push(k); bewerkId = k.id; tekenTabs(); kindNaarFormulier(); $('kNaam').focus(); };
+t.appendChild(plus);
+}
+$('oudersBtn').onclick = () => {
+if (state !== 'idle') return;
+data = leesData();
+if (!data.kinderen.length) data.kinderen.push({ id: nieuwId() });
+if (!kindVan(bewerkId)) bewerkId = (bellers()[0] || data.kinderen[0]).id;
+$('duur').value = String(data.duur);
+tekenTabs(); kindNaarFormulier();
+$('paneel').classList.remove('hidden');
+$('paneel').scrollTop = 0;
+};
 $('opslaanBtn').onclick = () => {
-boek = { naam: $('kNaam').value.trim(), leeftijd: $('kLeeftijd').value.trim(), info: $('kInfo').value.trim(), verbeter: $('kVerbeter').value.trim(), fans: leesFans(), vorige: $('kVorige').value.trim() };
-schrijfBoek(boek);
+formulierNaarKind();
+data.kinderen = data.kinderen.filter(k => k.naam || k.info || k.verbeter || k.vorige || (k.fans || []).length);
+data.bellers = (data.bellers || []).filter(id => kindVan(id));
+if (!data.bellers.length && data.kinderen.length) data.bellers = [data.kinderen[0].id];
+data.duur = Number($('duur').value) || 2;
+schrijfData();
 toonBoekStatus();
 $('paneel').classList.add('hidden');
 };
-$('wisBtn').onclick = () => {
-if (!$('kNaam').value && !$('kInfo').value && !$('kVerbeter').value && !$('kVorige').value) return;
-$('fans').querySelectorAll('.chip.aan').forEach(c => c.classList.remove('aan')); $('fansExtra').value = '';
-$('kNaam').value = $('kLeeftijd').value = $('kInfo').value = $('kVerbeter').value = $('kVorige').value = '';
+$('verwijderBtn').onclick = () => {
+const b = $('verwijderBtn');
+if (!b.dataset.zeker) { b.dataset.zeker = '1'; b.textContent = 'Zeker? Tik nog eens'; return; }
+data.kinderen = data.kinderen.filter(k => k.id !== bewerkId);
+data.bellers = (data.bellers || []).filter(id => id !== bewerkId);
+if (!data.kinderen.length) data.kinderen.push({ id: nieuwId() });
+bewerkId = data.kinderen[0].id;
+schrijfData();
+tekenTabs(); kindNaarFormulier(); toonBoekStatus();
 };
-const heeftBoek = () => Boolean(boek.naam || boek.info || boek.verbeter || boek.vorige || (boek.fans || []).length);
+const heeftBoek = () => bellers().some(k => k.naam || k.info || k.verbeter || k.vorige || (k.fans || []).length);
 function toonBoekStatus() {
-const b = $('oudersBtn'); const leeg = !heeftBoek();
+const b = $('oudersBtn'); const leeg = !data.kinderen.some(k => k.naam || k.info);
 b.classList.toggle('leeg', leeg);
-b.textContent = leeg ? '📖 Voor ouders: vul in!' : '📖 Boek van ' + (boek.naam || 'je kind');
+b.textContent = leeg ? '📖 Voor ouders: vul in!' : '📖 Het grote boek';
+const w = $('wie'); w.innerHTML = '';
+const benoemd = data.kinderen.filter(k => k.naam);
+if (benoemd.length < 2) { w.classList.add('hidden'); return; }
+w.classList.remove('hidden');
+const lab = document.createElement('div'); lab.className = 'wie-label'; lab.textContent = 'Wie belt er?'; w.appendChild(lab);
+const rij = document.createElement('div'); rij.className = 'wie-rij';
+const gekozen = new Set(bellers().map(k => k.id));
+for (const k of benoemd) {
+const c = document.createElement('button'); c.type = 'button'; c.className = 'wie-chip' + (gekozen.has(k.id) ? ' aan' : ''); c.textContent = k.naam;
+c.onclick = () => {
+if (state !== 'idle') return;
+const s = new Set(bellers().map(x => x.id));
+if (s.has(k.id)) { if (s.size > 1) s.delete(k.id); } else s.add(k.id);
+data.bellers = [...s]; schrijfData(); toonBoekStatus();
+};
+rij.appendChild(c);
+}
+w.appendChild(rij);
 }
 toonBoekStatus();
 const OPEN = 'sint-open-gesprek';
-function bewaarOpen() { try { localStorage.setItem(OPEN, JSON.stringify(history)); } catch {} }
+let belIds = [];
+function bewaarOpen() { try { localStorage.setItem(OPEN, JSON.stringify({ history, ids: belIds })); } catch {} }
 let bezigMetSamenvatting = false;
-async function bewaarSamenvatting(gesprek) {
+async function bewaarSamenvatting(open) {
+if (Array.isArray(open)) open = { history: open, ids: bellers().map(k => k.id) };
+const gesprek = open && open.history;
 if (!gesprek || !gesprek.some(m => m.role === 'user')) { try { localStorage.removeItem(OPEN); } catch {} return; }
 if (bezigMetSamenvatting) return;
 bezigMetSamenvatting = true;
 const knop = $('oudersBtn'); knop.textContent = '📖 De Sint schrijft in zijn boek…';
+const wie = (open.ids || []).map(kindVan).filter(Boolean);
 try {
 for (let poging = 0; poging < 3; poging++) {
 try {
-const r = await fetch(API + 'chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'samenvatting', messages: gesprek }) });
+const r = await fetch(API + 'chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'samenvatting', messages: gesprek, kinderen: wie.map(k => ({ naam: k.naam })) }) });
 const j = await r.json();
 if (r.ok && j.text) {
-boek = leesBoek();
-const oud = (boek.vorige || '').split(/\n{2,}/).filter(Boolean);
-boek.vorige = [j.text.trim(), ...oud].slice(0, 5).join('\n\n');
-schrijfBoek(boek);
-try { if (localStorage.getItem(OPEN) === JSON.stringify(gesprek)) localStorage.removeItem(OPEN); } catch {}
-if (!$('paneel').classList.contains('hidden')) $('kVorige').value = boek.vorige;
+data = leesData();
+for (const id of open.ids || []) {
+const k = kindVan(id); if (!k) continue;
+const oud = (k.vorige || '').split(/\n{2,}/).filter(Boolean);
+k.vorige = [j.text.trim(), ...oud].slice(0, 5).join('\n\n');
+if (id === bewerkId && !$('paneel').classList.contains('hidden')) $('kVorige').value = k.vorige;
+}
+schrijfData();
+try { const nu = JSON.parse(localStorage.getItem(OPEN) || 'null'); if (nu && JSON.stringify(nu.history || nu) === JSON.stringify(gesprek)) localStorage.removeItem(OPEN); } catch {}
 return;
 }
 } catch (e) { console.warn('samenvatting mislukt', e); }
@@ -314,7 +411,7 @@ await new Promise(r => setTimeout(r, 1500 * (poging + 1)));
 }
 } finally { bezigMetSamenvatting = false; toonBoekStatus(); }
 }
-(() => { try { const o = JSON.parse(localStorage.getItem(OPEN) || 'null'); if (o && o.length) bewaarSamenvatting(o); } catch {} })();
+(() => { try { const o = JSON.parse(localStorage.getItem(OPEN) || 'null'); if (o && (o.length || o.history)) bewaarSamenvatting(o); } catch {} })();
 function setStatus(t) { $('status').textContent = t; }
 function setMode(m) {
 state = m;
@@ -361,14 +458,14 @@ return;
 $('callCol').classList.add('hidden');
 $('hangCol').classList.remove('hidden');
 $('sub').textContent = 'Sinterklaaskasteel, Spanje';
-try { const o = JSON.parse(localStorage.getItem(OPEN) || 'null'); if (o && o.length) bewaarSamenvatting(o); } catch {}
-history = [];
+try { const o = JSON.parse(localStorage.getItem(OPEN) || 'null'); if (o && (o.length || o.history)) bewaarSamenvatting(o); } catch {}
+history = []; belIds = bellers().map(k => k.id); afgesloten = false;
 setMode('ringing');
 ring(audioCtx);
 const connectP = connectSTT().catch(e => { throw e; });
 const ringP = new Promise(r => setTimeout(r, 4200 + Math.random() * 1500));
 const groetP = heeftBoek()
-? fetch(API + 'chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'groet', kind: boek }) })
+? fetch(API + 'chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'groet', kinderen: bellers().map(zonderId) }) })
 .then(r => r.ok ? r.json() : {}).then(j => j.text || GROET).catch(() => GROET)
 : Promise.resolve(GROET);
 let groet;
@@ -402,7 +499,7 @@ micStream && micStream.getTracks().forEach(t => t.stop());
 try { audioCtx && audioCtx.close(); } catch {}
 clearTimeout(porTimer); clearTimeout(beurtTimer); beurtTekst = '';
 workletNode = micStream = audioCtx = null;
-if (state !== 'idle' && history.length) bewaarSamenvatting(history.slice());
+if (state !== 'idle' && history.length) bewaarSamenvatting({ history: history.slice(), ids: belIds });
 setMode('idle');
 $('timer').textContent = '';
 $('sub').textContent = 'Rechtstreeks naar het Sinterklaaskasteel';
@@ -412,9 +509,10 @@ $('callCol').classList.remove('hidden');
 const MODELLEN = ['assemblyai-stt-3-7-realtime-agent', 'universal-3-6-pro', 'universal-3-5-pro', 'assemblyai-stt-3-7-realtime'];
 function sleutelwoorden() {
 const vast = ['Sinterklaas', 'Sint', 'Piet', 'Pieten', 'Zwarte Piet', 'Slechtvaardige', 'stoomboot', 'Spanje', 'schoen', 'wortel', 'pepernoten', 'speculaas', 'cadeautje', 'speelgoed', 'braaf', 'liedje', 'Lego'];
-const tekst = [boek.info, boek.verbeter].filter(Boolean).join(' ');
+const kids = bellers();
+const tekst = kids.map(k => [k.info, k.verbeter].filter(Boolean).join(' ')).join(' ');
 const namen = tekst.match(/[A-ZÀ-Ý][a-zà-ÿ]{2,}/g) || [];
-const lijst = [boek.naam, ...(boek.fans || []).map(x => x.replace(/\s*\(.*\)/, '')), ...namen, ...vast].map(w => String(w || '').trim()).filter(w => w && w.length <= 40);
+const lijst = [...kids.map(k => k.naam), ...kids.flatMap(k => k.fans || []).map(x => x.replace(/\s*\(.*\)/, '')), ...namen, ...vast].map(w => String(w || '').trim()).filter(w => w && w.length <= 40);
 return [...new Set(lijst)].slice(0, 60);
 }
 async function probeerModel(model, metTaal, metWoorden) {
@@ -496,9 +594,10 @@ clearTimeout(porTimer); gepord = false;
 history.push({ role: 'user', content: kindTekst });
 bewaarOpen();
 setMode('thinking');
+const afronden = tijdOm();
 let tekst;
 try {
-const r = await fetch(API + 'chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'antwoord', messages: history, kind: boek }) });
+const r = await fetch(API + 'chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'antwoord', messages: history, kinderen: belIds.map(kindVan).filter(Boolean).map(zonderId), afronden }) });
 const j = await r.json();
 if (!r.ok) throw new Error(j.error);
 tekst = j.text;
@@ -507,9 +606,13 @@ console.error(e);
 tekst = 'Oei, de lijn kraakt een beetje hier in Spanje. Kun je dat nog eens zeggen?';
 }
 if (state === 'idle') return;
+if (afronden) { afgesloten = true; await sintZegt(tekst, true); return; }
 await sintZegt(tekst);
 }
-async function sintZegt(tekst) {
+let afgesloten = false;
+const tijdOm = () => startTime && (Date.now() - startTime) > (data.duur || 2) * 60000;
+const AFSCHEID = 'Oei, de Pieten roepen me, ik moet verder werken aan mijn grote boek. Dag mijn beste kind, tot gauw en wees maar braaf!';
+async function sintZegt(tekst, laatste) {
 if (state === 'idle') return;
 history.push({ role: 'assistant', content: tekst });
 bewaarOpen();
@@ -523,12 +626,16 @@ console.warn('TTS fout, browserstem', e); cfg.tts = 'browser';
 try { await spreekBrowser(tekst); } catch {}
 }
 if (state === 'idle') return;
+if (laatste) { await new Promise(r => setTimeout(r, 900)); if (state !== 'idle') hangUp(); return; }
 await new Promise(r => setTimeout(r, 300));
 if (state === 'idle') return;
 setMode('listening');
 clearTimeout(porTimer);
 porTimer = setTimeout(() => {
-if (state === 'listening' && !liveEl && !gepord) { gepord = true; sintZegt('Hallo? Ben je daar nog, mijn beste kind? Je mag gerust iets zeggen hoor.'); }
+if (state !== 'listening' || liveEl) return;
+if (tijdOm()) { afgesloten = true; sintZegt(AFSCHEID, true); return; }
+if (!gepord) { gepord = true; sintZegt('Hallo? Ben je daar nog, mijn beste kind? Je mag gerust iets zeggen hoor.'); }
+else { afgesloten = true; sintZegt(AFSCHEID, true); }
 }, 15000);
 }
 let porTimer = null, gepord = false;
