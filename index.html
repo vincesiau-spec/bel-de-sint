@@ -112,6 +112,9 @@ filter: drop-shadow(0 4px 6px rgba(0,0,0,.4));
 }
 .ouders-btn.leeg { animation: boekpuls 1.4s ease-in-out infinite; background: var(--goud); color: var(--rood-donker); }
 @keyframes boekpuls { 50% { transform: scale(1.08); } }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 2px solid #e9d9b0; background: #fff; color: #3b1a1f; border-radius: 999px; padding: 6px 11px; font: 700 13px 'Nunito', sans-serif; cursor: pointer; }
+.chip.aan { background: var(--goud); border-color: var(--goud); color: var(--rood-donker); }
 .ouders-btn {
 position: absolute; left: 16px; top: 16px; background: rgba(0,0,0,.25); color: var(--goud-licht);
 border: 1.5px solid var(--goud); border-radius: 999px; padding: 6px 12px; font: 700 13px 'Nunito', sans-serif; cursor: pointer;
@@ -157,6 +160,9 @@ border: 2px solid #e9d9b0; background: #fff; color: #222;
 </div>
 <label for="kInfo">Wat weet de Sint over het kind?</label>
 <textarea id="kInfo" placeholder="bv. Heeft een broertje Mats (3) en een kat Minou. Zit in het eerste leerjaar en leert lezen. Is soms wat ongeduldig maar helpt goed met tafeldekken. Wil graag een Lego-brandweerkazerne. Doet aan turnen."></textarea>
+<label>Waar is je kind fan van?</label>
+<div class="chips" id="fans"></div>
+<input id="fansExtra" placeholder="Nog iets anders? bv. Spider-Man, ballet, Nijntje" style="margin-top:8px">
 <label for="kVerbeter">Wat mag je kind komend jaar beter doen?</label>
 <textarea id="kVerbeter" placeholder="bv. Haar kamer beter opruimen. Minder ruzie maken met broertje Mats. Groenten proeven aan tafel."></textarea>
 <div class="klein">De Sint brengt dit lief en bemoedigend ter sprake en vraagt of je kind wil proberen.</div>
@@ -241,22 +247,40 @@ const BOEK = 'sint-boek-v1';
 function leesBoek() { try { return JSON.parse(localStorage.getItem(BOEK)) || {}; } catch { return {}; } }
 function schrijfBoek(b) { try { localStorage.setItem(BOEK, JSON.stringify(b)); } catch {} }
 let boek = leesBoek();
+const FANS = ["Paw Patrol", "Bluey", "K3", "Bumba", "Frozen (Elsa en Anna)", "Peppa Pig", "Maya de Bij", "Mega Mindy", "Kabouter Plop", "Samson en Marie", "Pokémon", "Minecraft", "Lego", "Superhelden", "Prinsessen", "Eenhoorns", "Dinosaurussen", "Paarden", "Voetbal", "Rode Duivels", "Brandweer en politie", "Auto's en treinen", "Dieren", "Tekenen en knutselen", "Dansen en zingen", "Gamen"];
+function tekenFans() {
+const gekozen = new Set(boek.fans || []);
+$('fans').innerHTML = '';
+for (const t of FANS) {
+const c = document.createElement('button'); c.type = 'button'; c.className = 'chip' + (gekozen.has(t) ? ' aan' : ''); c.textContent = t;
+c.onclick = () => c.classList.toggle('aan');
+$('fans').appendChild(c);
+}
+$('fansExtra').value = (boek.fans || []).filter(t => !FANS.includes(t)).join(', ');
+}
+function leesFans() {
+const lijst = [...$('fans').querySelectorAll('.chip.aan')].map(c => c.textContent);
+const extra = $('fansExtra').value.split(',').map(x => x.trim()).filter(Boolean);
+return [...new Set([...lijst, ...extra])].slice(0, 30);
+}
 function vulPaneel() {
 $('kNaam').value = boek.naam || ''; $('kLeeftijd').value = boek.leeftijd || '';
+tekenFans();
 $('kInfo').value = boek.info || ''; $('kVerbeter').value = boek.verbeter || ''; $('kVorige').value = boek.vorige || '';
 }
 $('oudersBtn').onclick = () => { if (state !== 'idle') return; vulPaneel(); $('paneel').classList.remove('hidden'); };
 $('opslaanBtn').onclick = () => {
-boek = { naam: $('kNaam').value.trim(), leeftijd: $('kLeeftijd').value.trim(), info: $('kInfo').value.trim(), verbeter: $('kVerbeter').value.trim(), vorige: $('kVorige').value.trim() };
+boek = { naam: $('kNaam').value.trim(), leeftijd: $('kLeeftijd').value.trim(), info: $('kInfo').value.trim(), verbeter: $('kVerbeter').value.trim(), fans: leesFans(), vorige: $('kVorige').value.trim() };
 schrijfBoek(boek);
 toonBoekStatus();
 $('paneel').classList.add('hidden');
 };
 $('wisBtn').onclick = () => {
 if (!$('kNaam').value && !$('kInfo').value && !$('kVerbeter').value && !$('kVorige').value) return;
+$('fans').querySelectorAll('.chip.aan').forEach(c => c.classList.remove('aan')); $('fansExtra').value = '';
 $('kNaam').value = $('kLeeftijd').value = $('kInfo').value = $('kVerbeter').value = $('kVorige').value = '';
 };
-const heeftBoek = () => Boolean(boek.naam || boek.info || boek.verbeter || boek.vorige);
+const heeftBoek = () => Boolean(boek.naam || boek.info || boek.verbeter || boek.vorige || (boek.fans || []).length);
 function toonBoekStatus() {
 const b = $('oudersBtn'); const leeg = !heeftBoek();
 b.classList.toggle('leeg', leeg);
@@ -390,7 +414,7 @@ function sleutelwoorden() {
 const vast = ['Sinterklaas', 'Sint', 'Piet', 'Pieten', 'Zwarte Piet', 'Slechtvaardige', 'stoomboot', 'Spanje', 'schoen', 'wortel', 'pepernoten', 'speculaas', 'cadeautje', 'speelgoed', 'braaf', 'liedje', 'Lego'];
 const tekst = [boek.info, boek.verbeter].filter(Boolean).join(' ');
 const namen = tekst.match(/[A-ZÀ-Ý][a-zà-ÿ]{2,}/g) || [];
-const lijst = [boek.naam, ...namen, ...vast].map(w => String(w || '').trim()).filter(w => w && w.length <= 40);
+const lijst = [boek.naam, ...(boek.fans || []).map(x => x.replace(/\s*\(.*\)/, '')), ...namen, ...vast].map(w => String(w || '').trim()).filter(w => w && w.length <= 40);
 return [...new Set(lijst)].slice(0, 60);
 }
 async function probeerModel(model, metTaal, metWoorden) {
