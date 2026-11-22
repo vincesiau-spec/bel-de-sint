@@ -386,12 +386,20 @@ $('hangCol').classList.add('hidden');
 $('callCol').classList.remove('hidden');
 }
 const MODELLEN = ['assemblyai-stt-3-7-realtime-agent', 'universal-3-6-pro', 'universal-3-5-pro', 'assemblyai-stt-3-7-realtime'];
-async function probeerModel(model, metTaal) {
+function sleutelwoorden() {
+const vast = ['Sinterklaas', 'Sint', 'Piet', 'Pieten', 'Zwarte Piet', 'Slechtvaardige', 'stoomboot', 'Spanje', 'schoen', 'wortel', 'pepernoten', 'speculaas', 'cadeautje', 'speelgoed', 'braaf', 'liedje', 'Lego'];
+const tekst = [boek.info, boek.verbeter].filter(Boolean).join(' ');
+const namen = tekst.match(/[A-ZÀ-Ý][a-zà-ÿ]{2,}/g) || [];
+const lijst = [boek.naam, ...namen, ...vast].map(w => String(w || '').trim()).filter(w => w && w.length <= 40);
+return [...new Set(lijst)].slice(0, 60);
+}
+async function probeerModel(model, metTaal, metWoorden) {
 const r = await fetch(API + 'token');
 const j = await r.json();
 if (!r.ok || !j.token) throw new Error('token');
 const p = { sample_rate: '16000', encoding: 'pcm_s16le', speech_model: model, format_turns: 'true', token: j.token, end_of_turn_confidence_threshold: '0.7', min_end_of_turn_silence_when_confident: '1000', max_turn_silence: '2500' };
 if (metTaal) p.language_codes = JSON.stringify(['nl']);
+if (metWoorden) p.keyterms_prompt = JSON.stringify(sleutelwoorden());
 const sock = new WebSocket('wss://streaming.assemblyai.com/v3/ws?' + new URLSearchParams(p));
 sock.binaryType = 'arraybuffer';
 await new Promise((res, rej) => {
@@ -404,16 +412,16 @@ return sock;
 }
 async function connectSTT() {
 let bewaard = null;
-try { bewaard = JSON.parse(localStorage.getItem('sint-stt') || 'null'); } catch {}
+try { bewaard = JSON.parse(localStorage.getItem('sint-stt2') || 'null'); } catch {}
 const pogingen = [];
 if (bewaard) pogingen.push(bewaard);
-for (const m of MODELLEN) { pogingen.push([m, true]); }
-for (const m of MODELLEN) { pogingen.push([m, false]); }
+for (const m of MODELLEN) { pogingen.push([m, true, true]); pogingen.push([m, true, false]); }
+for (const m of MODELLEN) { pogingen.push([m, false, true]); pogingen.push([m, false, false]); }
 let laatste;
-for (const [m, taal] of pogingen) {
+for (const [m, taal, woorden] of pogingen) {
 try {
-ws = await probeerModel(m, taal);
-try { localStorage.setItem('sint-stt', JSON.stringify([m, taal])); } catch {}
+ws = await probeerModel(m, taal, woorden);
+try { localStorage.setItem('sint-stt2', JSON.stringify([m, taal, woorden])); } catch {}
 console.log('AssemblyAI model', m, taal);
 break;
 } catch (e) { laatste = e; console.warn('model faalt', m, taal, e.message); ws = null; if (state === 'idle') return; }
