@@ -110,6 +110,8 @@ box-shadow: 0 8px 20px rgba(0,0,0,.35); transition: transform .15s;
 position: absolute; right: -14px; top: 90px; width: 38px; height: 360px; pointer-events: none;
 filter: drop-shadow(0 4px 6px rgba(0,0,0,.4));
 }
+.ouders-btn.leeg { animation: boekpuls 1.4s ease-in-out infinite; background: var(--goud); color: var(--rood-donker); }
+@keyframes boekpuls { 50% { transform: scale(1.08); } }
 .ouders-btn {
 position: absolute; left: 16px; top: 16px; background: rgba(0,0,0,.25); color: var(--goud-licht);
 border: 1.5px solid var(--goud); border-radius: 999px; padding: 6px 12px; font: 700 13px 'Nunito', sans-serif; cursor: pointer;
@@ -244,6 +246,7 @@ $('oudersBtn').onclick = () => { if (state !== 'idle') return; vulPaneel(); $('p
 $('opslaanBtn').onclick = () => {
 boek = { naam: $('kNaam').value.trim(), leeftijd: $('kLeeftijd').value.trim(), info: $('kInfo').value.trim(), vorige: $('kVorige').value.trim() };
 schrijfBoek(boek);
+toonBoekStatus();
 $('paneel').classList.add('hidden');
 };
 $('wisBtn').onclick = () => {
@@ -251,6 +254,12 @@ if (!$('kNaam').value && !$('kInfo').value && !$('kVorige').value) return;
 $('kNaam').value = $('kLeeftijd').value = $('kInfo').value = $('kVorige').value = '';
 };
 const heeftBoek = () => Boolean(boek.naam || boek.info || boek.vorige);
+function toonBoekStatus() {
+const b = $('oudersBtn'); const leeg = !heeftBoek();
+b.classList.toggle('leeg', leeg);
+b.textContent = leeg ? '📖 Voor ouders: vul in!' : '📖 Boek van ' + (boek.naam || 'je kind');
+}
+toonBoekStatus();
 async function bewaarSamenvatting(gesprek) {
 if (!gesprek.some(m => m.role === 'user')) return;
 try {
