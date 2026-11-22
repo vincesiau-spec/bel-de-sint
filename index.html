@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="nl-BE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bel de Sint</title>
+<meta name="theme-color" content="#8f0f22">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+--rood: #b3122e;
+--rood-donker: #6e0a19;
+--goud: #e8b923;
+--goud-licht: #ffe08a;
+--wit: #fffaf0;
+--groen: #23a55a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+font-family: 'Nunito', system-ui, sans-serif;
+color: var(--wit);
+background:
+radial-gradient(circle at 50% 0%, #d4243f 0%, var(--rood) 35%, var(--rood-donker) 100%);
+overflow: hidden;
+display: flex; align-items: center; justify-content: center;
+padding: 16px;
+}
+/* sterretjes / dakpannen-patroon */
+body::before {
+content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .14;
+background-image:
+radial-gradient(circle, var(--goud-licht) 1.5px, transparent 2px),
+radial-gradient(circle, var(--goud-licht) 1px, transparent 1.5px);
+background-size: 60px 60px, 37px 37px;
+background-position: 0 0, 18px 22px;
+}
+.snow { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+.snow i {
+position: absolute; top: -10px; width: 6px; height: 6px; border-radius: 50%;
+background: var(--wit); opacity: .7; animation: val linear infinite;
+}
+@keyframes val { to { transform: translateY(110vh) translateX(30px); } }
+.phone {
+position: relative; width: 100%; max-width: 400px; height: min(780px, 100%);
+border-radius: 40px; padding: 28px 24px 32px;
+background: linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.35));
+border: 3px solid var(--goud);
+box-shadow: 0 0 0 6px rgba(232,185,35,.25), 0 30px 60px rgba(0,0,0,.45), inset 0 0 40px rgba(0,0,0,.3);
+display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.status { margin-top: 30px; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: var(--goud-licht); min-height: 20px; }
+h1 {
+font-family: 'Cinzel Decorative', serif; font-size: clamp(30px, 9vw, 40px);
+color: var(--goud); text-shadow: 0 2px 0 var(--rood-donker), 0 0 20px rgba(232,185,35,.4);
+margin-top: 8px; line-height: 1.1;
+}
+.sub { margin-top: 6px; font-size: 16px; opacity: .9; }
+.timer { font-variant-numeric: tabular-nums; font-size: 18px; margin-top: 4px; color: var(--goud-licht); min-height: 24px; }
+.avatar-wrap { position: relative; margin: 26px 0 16px; width: 200px; height: 200px; flex-shrink: 0; }
+.avatar {
+position: absolute; inset: 0; border-radius: 50%;
+background: radial-gradient(circle at 50% 35%, #fff 0%, #f3e6c8 100%);
+border: 5px solid var(--goud);
+box-shadow: 0 0 0 8px rgba(255,255,255,.08), 0 10px 30px rgba(0,0,0,.4);
+overflow: hidden; display: flex; align-items: flex-end; justify-content: center;
+}
+.ring { position: absolute; inset: -6px; border-radius: 50%; border: 3px solid var(--goud); opacity: 0; }
+.ringing .ring { animation: puls 1.6s ease-out infinite; }
+.ringing .ring:nth-child(2) { animation-delay: .5s; }
+.ringing .ring:nth-child(3) { animation-delay: 1s; }
+@keyframes puls { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(1.5); opacity: 0; } }
+.speaking .avatar { animation: praat .35s ease-in-out infinite alternate; }
+@keyframes praat { from { transform: scale(1); } to { transform: scale(1.04); } }
+.listening .avatar { box-shadow: 0 0 0 8px rgba(35,165,90,.35), 0 10px 30px rgba(0,0,0,.4); }
+.bubble {
+width: 100%; flex: 1; min-height: 0; overflow-y: auto;
+display: flex; flex-direction: column; gap: 8px; padding: 4px 2px; margin-bottom: 14px;
+scrollbar-width: thin;
+}
+.hint { font-size: 15px; opacity: .85; line-height: 1.4; max-width: 300px; margin: auto 0; }
+.buttons { display: flex; gap: 56px; justify-content: center; align-items: flex-end; }
+.btn {
+width: 76px; height: 76px; border-radius: 50%; border: none; cursor: pointer;
+display: grid; place-items: center; color: #fff;
+box-shadow: 0 8px 20px rgba(0,0,0,.35); transition: transform .15s;
+}
+.btn:active { transform: scale(.92); }
+.btn svg { width: 34px; height: 34px; fill: currentColor; }
+.btn.call { background: var(--groen); }
+.btn.call.big { width: 96px; height: 96px; animation: wiebel 1.2s ease-in-out infinite; }
+.btn.call.big svg { width: 44px; height: 44px; }
+@keyframes wiebel { 0%,100% { transform: rotate(0) } 10% { transform: rotate(-12deg) } 20% { transform: rotate(12deg) } 30% { transform: rotate(-8deg) } 40% { transform: rotate(0) } }
+.btn.hang { background: #e02424; }
+.btn.hang svg { transform: rotate(135deg); }
+.btn-label { font-size: 13px; margin-top: 8px; opacity: .9; }
+.btn-col { display: flex; flex-direction: column; align-items: center; }
+.hidden { display: none !important; }
+.golf { display: flex; align-items: center; justify-content: center; gap: 6px; height: 70px; margin: auto; }
+.golf span { width: 8px; height: 12px; border-radius: 4px; background: var(--goud); opacity: .35; }
+.speaking ~ .bubble .golf span, .golf.sint span { opacity: 1; animation: golf .9s ease-in-out infinite; }
+.golf.kind span { opacity: 1; background: #7ee2a2; animation: golf .7s ease-in-out infinite; }
+.golf.denkt span { opacity: .9; animation: denk 1.2s ease-in-out infinite; }
+.golf span:nth-child(2){animation-delay:.1s}.golf span:nth-child(3){animation-delay:.2s}.golf span:nth-child(4){animation-delay:.3s}.golf span:nth-child(5){animation-delay:.4s}.golf span:nth-child(6){animation-delay:.5s}.golf span:nth-child(7){animation-delay:.6s}
+@keyframes golf { 0%,100% { height: 12px } 50% { height: 60px } }
+@keyframes denk { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-10px) } }
+.err { color: var(--goud-licht); font-size: 14px; margin-top: 10px; min-height: 18px; }
+.staf {
+position: absolute; right: -14px; top: 90px; width: 38px; height: 360px; pointer-events: none;
+filter: drop-shadow(0 4px 6px rgba(0,0,0,.4));
+}
+.ouders-btn {
+position: absolute; left: 16px; top: 16px; background: rgba(0,0,0,.25); color: var(--goud-licht);
+border: 1.5px solid var(--goud); border-radius: 999px; padding: 6px 12px; font: 700 13px 'Nunito', sans-serif; cursor: pointer;
+}
+.paneel {
+position: absolute; inset: 0; border-radius: inherit; z-index: 5; padding: 22px 20px;
+background: var(--wit); color: #3b1a1f; overflow-y: auto; text-align: left;
+}
+.paneel h2 { font-family: 'Cinzel Decorative', serif; color: var(--rood); font-size: 22px; margin-bottom: 4px; }
+.paneel p.uitleg { font-size: 14px; opacity: .8; margin-bottom: 14px; line-height: 1.4; }
+.paneel label { display: block; font-weight: 800; font-size: 14px; margin: 12px 0 4px; color: var(--rood-donker); }
+.paneel input, .paneel textarea {
+width: 100%; font: 500 15px 'Nunito', sans-serif; padding: 10px 12px; border-radius: 12px;
+border: 2px solid #e9d9b0; background: #fff; color: #222;
+}
+.paneel textarea { min-height: 90px; resize: vertical; }
+.paneel input:focus, .paneel textarea:focus { outline: none; border-color: var(--goud); }
+.rij { display: flex; gap: 10px; }
+.rij > div:first-child { flex: 2; } .rij > div:last-child { flex: 1; }
+.acties { display: flex; gap: 10px; margin-top: 18px; }
+.acties button { flex: 1; padding: 12px; border-radius: 14px; border: none; font: 800 15px 'Nunito', sans-serif; cursor: pointer; }
+.opslaan { background: var(--rood); color: #fff; }
+.wis { background: #f1e7cf; color: var(--rood-donker); }
+.klein { font-size: 12px; opacity: .7; margin-top: 4px; }
+@media (max-width: 440px) { .staf { display: none; } .phone { border-radius: 28px; } }
+</style>
+</head>
+<body>
+<div class="snow" id="snow"></div>
+<main class="phone" id="phone">
+<svg class="staf" viewBox="0 0 40 360" aria-hidden="true">
+<rect x="17" y="70" width="6" height="290" rx="3" fill="#e8b923"/>
+<path d="M20 75 C 20 20, 38 10, 36 36 C 34 52, 22 48, 26 38" fill="none" stroke="#e8b923" stroke-width="7" stroke-linecap="round"/>
+<circle cx="20" cy="78" r="6" fill="#ffe08a"/>
+</svg>
+<button class="ouders-btn" id="oudersBtn">📖 Voor ouders</button>
+<section class="paneel hidden" id="paneel" aria-label="Het grote boek">
+<h2>Het grote boek</h2>
+<p class="uitleg">Vul hier wat de Sint over je kind mag weten. Na elk gesprek schrijft de Sint zelf een korte samenvatting bij, zodat hij er de volgende keer naar kan verwijzen. Alles blijft bewaard op dit toestel.</p>
+<div class="rij">
+<div><label for="kNaam">Naam</label><input id="kNaam" placeholder="bv. Lotte"></div>
+<div><label for="kLeeftijd">Leeftijd</label><input id="kLeeftijd" placeholder="bv. 6"></div>
+</div>
+<label for="kInfo">Wat weet de Sint over het kind?</label>
+<textarea id="kInfo" placeholder="bv. Heeft een broertje Mats (3) en een kat Minou. Zit in het eerste leerjaar en leert lezen. Is soms wat ongeduldig maar helpt goed met tafeldekken. Wil graag een Lego-brandweerkazerne. Doet aan turnen."></textarea>
+<label for="kVorige">Vorige gesprekken</label>
+<textarea id="kVorige" placeholder="Wordt automatisch aangevuld na elk gesprek. Je kunt dit ook zelf aanpassen."></textarea>
+<div class="klein">De Sint gebruikt dit om bv. te zeggen: "Vorige keer vertelde je me over je kat Minou!"</div>
+<div class="acties">
+<button class="wis" id="wisBtn">Alles wissen</button>
+<button class="opslaan" id="opslaanBtn">Opslaan</button>
+</div>
+</section>
+<div class="status" id="status">Sinterklaas-lijn</div>
+<h1>Bel de Sint</h1>
+<div class="sub" id="sub">Rechtstreeks naar het Sinterklaaskasteel</div>
+<div class="timer" id="timer"></div>
+<div class="avatar-wrap" id="avatarWrap">
+<div class="ring"></div><div class="ring"></div><div class="ring"></div>
+<div class="avatar">
+<svg viewBox="0 0 200 200" width="190" height="190" aria-label="Sinterklaas">
+<path d="M58 92 L60 40 Q100 -6 140 40 L142 92 Z" fill="#b3122e"/>
+<path d="M58 92 L60 40 Q100 -6 140 40 L142 92 Z" fill="none" stroke="#e8b923" stroke-width="5"/>
+<rect x="95" y="18" width="10" height="72" fill="#e8b923"/>
+<rect x="56" y="84" width="88" height="14" rx="3" fill="#e8b923"/>
+<rect x="93" y="34" width="14" height="40" rx="2" fill="#ffe08a"/>
+<rect x="83" y="44" width="34" height="12" rx="2" fill="#ffe08a"/>
+<ellipse cx="100" cy="118" rx="34" ry="28" fill="#f6cfae"/>
+<circle cx="87" cy="113" r="3.5" fill="#3a2a20"/>
+<circle cx="113" cy="113" r="3.5" fill="#3a2a20"/>
+<path d="M80 104 q7 -5 14 0" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
+<path d="M106 104 q7 -5 14 0" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
+<ellipse cx="100" cy="123" rx="6" ry="5" fill="#eaa98a"/>
+<circle cx="78" cy="124" r="6" fill="#f0a3a3" opacity=".6"/>
+<circle cx="122" cy="124" r="6" fill="#f0a3a3" opacity=".6"/>
+<path d="M62 120 Q60 200 100 205 Q140 200 138 120 Q130 150 100 150 Q70 150 62 120 Z" fill="#fff"/>
+<path d="M84 134 Q100 128 116 134 Q100 142 84 134 Z" fill="#fff" stroke="#e7e2d6" stroke-width="1.5"/>
+<path d="M92 140 q8 6 16 0" stroke="#b55" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+<path d="M30 200 Q40 165 66 160 L100 205 L134 160 Q160 165 170 200 Z" fill="#b3122e"/>
+<path d="M66 160 L100 205 L134 160" fill="none" stroke="#e8b923" stroke-width="5"/>
+</svg>
+</div>
+</div>
+<div class="bubble" id="bubble" style="justify-content:center;align-items:center">
+<div class="golf hidden" id="golf"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+<p class="hint" id="hint">Druk op de groene knop om Sinterklaas te bellen. Daarna babbel je gewoon met de Sint: als je stopt met praten, antwoordt hij vanzelf.</p>
+</div>
+<div class="buttons">
+<div class="btn-col" id="callCol">
+<button class="btn call big" id="callBtn" aria-label="Bel de Sint">
+<svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg>
+</button>
+<div class="btn-label">Bellen</div>
+</div>
+<div class="btn-col hidden" id="hangCol">
+<button class="btn hang" id="hangBtn" aria-label="Ophangen">
+<svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg>
+</button>
+<div class="btn-label">Ophangen</div>
+</div>
+</div>
+<div class="err" id="err"></div>
+</main>
+<script>
+(() => {
+const s = document.getElementById('snow');
+for (let i = 0; i < 40; i++) {
+const f = document.createElement('i');
+const size = 3 + Math.random() * 5;
+f.style.cssText = `left:${Math.random()*100}%;width:${size}px;height:${size}px;animation-duration:${6+Math.random()*10}s;animation-delay:${-Math.random()*15}s;opacity:${.3+Math.random()*.6}`;
+s.appendChild(f);
+}
+})();
+const $ = (id) => document.getElementById(id);
+const wrap = $('avatarWrap'), bubble = $('bubble');
+const GROET = 'Hallo, hallo! Met Sinterklaas! Wat fijn dat je belt. Hoe heet jij, mijn beste kind?';
+const API = 'https://greystonerecruitment.app.n8n.cloud/webhook/bel-de-sint-';
+let cfg = { tts: 'server' };
+let state = 'idle';
+let ws, audioCtx, micStream, workletNode, ringTimer, clockTimer, startTime;
+let history = [];
+let liveEl = null, lastTurnOrder = -1, currentAudio = null;
+const BOEK = 'sint-boek-v1';
+function leesBoek() { try { return JSON.parse(localStorage.getItem(BOEK)) || {}; } catch { return {}; } }
+function schrijfBoek(b) { try { localStorage.setItem(BOEK, JSON.stringify(b)); } catch {} }
+let boek = leesBoek();
+function vulPaneel() {
+$('kNaam').value = boek.naam || ''; $('kLeeftijd').value = boek.leeftijd || '';
+$('kInfo').value = boek.info || ''; $('kVorige').value = boek.vorige || '';
+}
+$('oudersBtn').onclick = () => { if (state !== 'idle') return; vulPaneel(); $('paneel').classList.remove('hidden'); };
+$('opslaanBtn').onclick = () => {
+boek = { naam: $('kNaam').value.trim(), leeftijd: $('kLeeftijd').value.trim(), info: $('kInfo').value.trim(), vorige: $('kVorige').value.trim() };
+schrijfBoek(boek);
+$('paneel').classList.add('hidden');
+};
+$('wisBtn').onclick = () => {
+if (!$('kNaam').value && !$('kInfo').value && !$('kVorige').value) return;
+$('kNaam').value = $('kLeeftijd').value = $('kInfo').value = $('kVorige').value = '';
+};
+const heeftBoek = () => Boolean(boek.naam || boek.info || boek.vorige);
+async function bewaarSamenvatting(gesprek) {
+if (!gesprek.some(m => m.role === 'user')) return;
+try {
+const r = await fetch(API + 'chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'samenvatting', messages: gesprek }) });
+const j = await r.json();
+if (!r.ok || !j.text) return;
+const oud = (boek.vorige || '').split(/\n{2,}/).filter(Boolean);
+boek.vorige = [j.text.trim(), ...oud].slice(0, 5).join('\n\n');
+schrijfBoek(boek);
+} catch (e) { console.warn('samenvatting mislukt', e); }
+}
+function setStatus(t) { $('status').textContent = t; }
+function setMode(m) {
+state = m;
+if (m === 'idle') { $('golf').className = 'golf hidden'; $('hint') && $('hint').classList.remove('hidden'); }
+else { $('hint') && $('hint').classList.add('hidden'); golf({ speaking: 'sint', thinking: 'denkt' }[m] || ''); }
+wrap.classList.toggle('speaking', m === 'speaking');
+wrap.classList.toggle('listening', m === 'listening');
+wrap.classList.toggle('ringing', m === 'ringing');
+setStatus({ ringing: 'Bellen…', listening: 'De Sint luistert…', thinking: 'De Sint denkt na…', speaking: 'De Sint praat…', idle: 'Sinterklaas-lijn' }[m]);
+}
+function addMsg() { return { classList: { remove() {} }, textContent: '' }; }
+function golf(kind) { const g = $('golf'); g.className = 'golf' + (kind ? ' ' + kind : ''); }
+function ring(ctx) {
+const play = () => {
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.frequency.value = 425; g.gain.value = 0.0001;
+o.connect(g).connect(ctx.destination);
+const t = ctx.currentTime;
+g.gain.exponentialRampToValueAtTime(0.15, t + 0.05);
+g.gain.setValueAtTime(0.15, t + 1);
+g.gain.exponentialRampToValueAtTime(0.0001, t + 1.05);
+o.start(t); o.stop(t + 1.1);
+};
+play();
+ringTimer = setInterval(play, 3000);
+}
+function opneemGeluid(ctx) {
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type = 'triangle'; o.frequency.value = 880;
+o.connect(g).connect(ctx.destination);
+const t = ctx.currentTime;
+g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+o.start(t); o.stop(t + 0.3);
+}
+$('callBtn').onclick = async () => {
+$('err').textContent = '';
+try {
+audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } });
+} catch (e) {
+$('err').textContent = 'De microfoon mag niet gebruikt worden. Geef toestemming en probeer opnieuw.';
+return;
+}
+$('callCol').classList.add('hidden');
+$('hangCol').classList.remove('hidden');
+$('sub').textContent = 'Sinterklaaskasteel, Spanje';
+history = [];
+setMode('ringing');
+ring(audioCtx);
+const connectP = connectSTT().catch(e => { throw e; });
+const ringP = new Promise(r => setTimeout(r, 4200 + Math.random() * 1500));
+const groetP = heeftBoek()
+? fetch(API + 'chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'groet', kind: boek }) })
+.then(r => r.ok ? r.json() : {}).then(j => j.text || GROET).catch(() => GROET)
+: Promise.resolve(GROET);
+let groet;
+try {
+[, , groet] = await Promise.all([connectP, ringP, groetP]);
+} catch (e) {
+console.error(e);
+hangUp();
+$('err').textContent = 'De Sint is even niet bereikbaar (' + (e.message || e) + ').';
+return;
+}
+if (state !== 'ringing') return;
+clearInterval(ringTimer);
+opneemGeluid(audioCtx);
+startTime = Date.now();
+clockTimer = setInterval(() => {
+const s = Math.floor((Date.now() - startTime) / 1000);
+$('timer').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+}, 500);
+await sintZegt(groet);
+};
+$('hangBtn').onclick = () => hangUp();
+function hangUp() {
+clearInterval(ringTimer); clearInterval(clockTimer);
+if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+if ('speechSynthesis' in window) speechSynthesis.cancel();
+try { ws && ws.readyState === 1 && ws.send(JSON.stringify({ type: 'Terminate' })); } catch {}
+setTimeout(() => { try { ws && ws.close(); } catch {} ws = null; }, 300);
+try { workletNode && workletNode.disconnect(); } catch {}
+micStream && micStream.getTracks().forEach(t => t.stop());
+try { audioCtx && audioCtx.close(); } catch {}
+clearTimeout(porTimer);
+workletNode = micStream = audioCtx = null;
+if (state !== 'idle' && history.length) bewaarSamenvatting(history.slice());
+setMode('idle');
+$('timer').textContent = '';
+$('sub').textContent = 'Rechtstreeks naar het Sinterklaaskasteel';
+$('hangCol').classList.add('hidden');
+$('callCol').classList.remove('hidden');
+}
+const MODELLEN = ['assemblyai-stt-3-7-realtime-agent', 'universal-3-6-pro', 'universal-3-5-pro', 'assemblyai-stt-3-7-realtime'];
+async function probeerModel(model, metTaal) {
+const r = await fetch(API + 'token');
+const j = await r.json();
+if (!r.ok || !j.token) throw new Error('token');
+const p = { sample_rate: '16000', encoding: 'pcm_s16le', speech_model: model, format_turns: 'true', token: j.token };
+if (metTaal) p.language_codes = JSON.stringify(['nl']);
+const sock = new WebSocket('wss://streaming.assemblyai.com/v3/ws?' + new URLSearchParams(p));
+sock.binaryType = 'arraybuffer';
+await new Promise((res, rej) => {
+const t = setTimeout(() => { try { sock.close(); } catch {} rej(new Error('timeout')); }, 8000);
+sock.onmessage = (ev) => { try { if (JSON.parse(ev.data).type === 'Begin') { clearTimeout(t); res(); } } catch {} };
+sock.onclose = (ev) => { clearTimeout(t); rej(new Error(ev.reason || ('code ' + ev.code))); };
+sock.onerror = () => {};
+});
+return sock;
+}
+async function connectSTT() {
+let bewaard = null;
+try { bewaard = JSON.parse(localStorage.getItem('sint-stt') || 'null'); } catch {}
+const pogingen = [];
+if (bewaard) pogingen.push(bewaard);
+for (const m of MODELLEN) { pogingen.push([m, true]); }
+for (const m of MODELLEN) { pogingen.push([m, false]); }
+let laatste;
+for (const [m, taal] of pogingen) {
+try {
+ws = await probeerModel(m, taal);
+try { localStorage.setItem('sint-stt', JSON.stringify([m, taal])); } catch {}
+console.log('AssemblyAI model', m, taal);
+break;
+} catch (e) { laatste = e; console.warn('model faalt', m, taal, e.message); ws = null; if (state === 'idle') return; }
+}
+if (!ws) throw new Error('spraakherkenning niet bereikbaar (' + (laatste && laatste.message) + ')');
+ws.onmessage = (ev) => onSTT(JSON.parse(ev.data));
+ws.onclose = (ev) => {
+if (state !== 'idle') {
+console.warn('STT gesloten', ev.code, ev.reason);
+$('err').textContent = 'Verbinding verbroken' + (ev.reason ? ': ' + ev.reason : '') + '.';
+hangUp();
+}
+};
+await audioCtx.audioWorklet.addModule('mic-worklet.js');
+const src = audioCtx.createMediaStreamSource(micStream);
+workletNode = new AudioWorkletNode(audioCtx, 'mic-processor');
+const stilte = new ArrayBuffer(1600);
+workletNode.port.onmessage = (e) => {
+if (!ws || ws.readyState !== 1) return;
+ws.send(state === 'listening' ? e.data : stilte);
+};
+src.connect(workletNode);
+}
+function onSTT(msg) {
+if (msg.type !== 'Turn' || state !== 'listening') return;
+const text = (msg.transcript || '').trim();
+if (!text) return;
+if (!liveEl) liveEl = addMsg();
+golf('kind');
+const klaar = msg.end_of_turn && (msg.turn_is_formatted || !('turn_is_formatted' in msg));
+if (klaar && msg.turn_order !== lastTurnOrder) {
+lastTurnOrder = msg.turn_order;
+liveEl.classList.remove('live');
+liveEl = null;
+antwoord(text);
+}
+}
+async function antwoord(kindTekst) {
+clearTimeout(porTimer); gepord = false;
+history.push({ role: 'user', content: kindTekst });
+setMode('thinking');
+let tekst;
+try {
+const r = await fetch(API + 'chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'antwoord', messages: history, kind: boek }) });
+const j = await r.json();
+if (!r.ok) throw new Error(j.error);
+tekst = j.text;
+} catch (e) {
+console.error(e);
+tekst = 'Oei, de lijn kraakt een beetje hier in Spanje. Kun je dat nog eens zeggen?';
+}
+if (state === 'idle') return;
+await sintZegt(tekst);
+}
+async function sintZegt(tekst) {
+if (state === 'idle') return;
+history.push({ role: 'assistant', content: tekst });
+addMsg('sint', tekst);
+setMode('speaking');
+try {
+if (cfg.tts === 'server') await speelElevenLabs(tekst);
+else await spreekBrowser(tekst);
+} catch (e) {
+console.warn('TTS fout, browserstem', e); cfg.tts = 'browser';
+try { await spreekBrowser(tekst); } catch {}
+}
+if (state === 'idle') return;
+await new Promise(r => setTimeout(r, 300));
+if (state === 'idle') return;
+setMode('listening');
+clearTimeout(porTimer);
+porTimer = setTimeout(() => {
+if (state === 'listening' && !liveEl && !gepord) { gepord = true; sintZegt('Hallo? Ben je daar nog, mijn beste kind? Je mag gerust iets zeggen hoor.'); }
+}, 15000);
+}
+let porTimer = null, gepord = false;
+let bron = null;
+async function speelElevenLabs(tekst) {
+const r = await fetch(API + 'tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: tekst }) });
+if (!r.ok) throw new Error('tts ' + r.status);
+const buf = await audioCtx.decodeAudioData(await r.arrayBuffer());
+if (state !== 'speaking') return;
+await new Promise((res) => {
+bron = audioCtx.createBufferSource();
+bron.buffer = buf;
+bron.connect(audioCtx.destination);
+bron.onended = res;
+currentAudio = { pause() { try { bron.stop(); } catch {} } };
+bron.start();
+});
+currentAudio = null;
+}
+function kiesStem() {
+const v = speechSynthesis.getVoices();
+return v.find(x => /^nl/i.test(x.lang) && /arnaud|bart|dirk|xander|maarten/i.test(x.name))
+|| v.find(x => x.lang === 'nl-BE')
+|| v.find(x => /^nl/i.test(x.lang));
+}
+function spreekBrowser(tekst) {
+return new Promise((res) => {
+if (!('speechSynthesis' in window)) return res();
+const u = new SpeechSynthesisUtterance(tekst);
+const stem = kiesStem();
+if (stem) u.voice = stem;
+u.lang = stem ? stem.lang : 'nl-BE';
+u.pitch = 0.7; u.rate = 0.92;
+u.onend = res; u.onerror = res;
+speechSynthesis.cancel();
+speechSynthesis.speak(u);
+});
+}
+if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = () => {};
+</script>
+</body>
+</html>
