@@ -346,7 +346,7 @@ setTimeout(() => { try { ws && ws.close(); } catch {} ws = null; }, 300);
 try { workletNode && workletNode.disconnect(); } catch {}
 micStream && micStream.getTracks().forEach(t => t.stop());
 try { audioCtx && audioCtx.close(); } catch {}
-clearTimeout(porTimer);
+clearTimeout(porTimer); clearTimeout(beurtTimer); beurtTekst = '';
 workletNode = micStream = audioCtx = null;
 if (state !== 'idle' && history.length) bewaarSamenvatting(history.slice());
 setMode('idle');
@@ -360,7 +360,7 @@ async function probeerModel(model, metTaal) {
 const r = await fetch(API + 'token');
 const j = await r.json();
 if (!r.ok || !j.token) throw new Error('token');
-const p = { sample_rate: '16000', encoding: 'pcm_s16le', speech_model: model, format_turns: 'true', token: j.token };
+const p = { sample_rate: '16000', encoding: 'pcm_s16le', speech_model: model, format_turns: 'true', token: j.token, end_of_turn_confidence_threshold: '0.7', min_end_of_turn_silence_when_confident: '1000', max_turn_silence: '2500' };
 if (metTaal) p.language_codes = JSON.stringify(['nl']);
 const sock = new WebSocket('wss://streaming.assemblyai.com/v3/ws?' + new URLSearchParams(p));
 sock.binaryType = 'arraybuffer';
@@ -407,18 +407,26 @@ ws.send(state === 'listening' ? e.data : stilte);
 };
 src.connect(workletNode);
 }
+// Kinderen pauzeren vaak midden in een zin: wacht na een afgeronde beurt nog even of het kind verder praat.
+const NAWACHT_MS = 1600;
+let beurtTekst = '', beurtTimer = null;
 function onSTT(msg) {
 if (msg.type !== 'Turn' || state !== 'listening') return;
 const text = (msg.transcript || '').trim();
 if (!text) return;
-if (!liveEl) liveEl = addMsg();
+liveEl = liveEl || addMsg();
 golf('kind');
+clearTimeout(beurtTimer); beurtTimer = null;
+clearTimeout(porTimer);
 const klaar = msg.end_of_turn && (msg.turn_is_formatted || !('turn_is_formatted' in msg));
 if (klaar && msg.turn_order !== lastTurnOrder) {
 lastTurnOrder = msg.turn_order;
-liveEl.classList.remove('live');
-liveEl = null;
-antwoord(text);
+beurtTekst = (beurtTekst + ' ' + text).trim();
+beurtTimer = setTimeout(() => {
+if (state !== 'listening' || !beurtTekst) return;
+const t = beurtTekst; beurtTekst = ''; liveEl = null;
+antwoord(t);
+}, NAWACHT_MS);
 }
 }
 async function antwoord(kindTekst) {
